@@ -1,0 +1,38 @@
+{% load i18n %}
+<nav aria-label="{% trans 'Main navigation' %}" class="container mx-auto px-4 max-w-5xl flex items-center justify-between h-14">
+
+  <a href="/" class="text-xl font-bold tracking-tight hover:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-white focus:rounded">
+    LoreForge
+  </a>
+
+  <ul class="flex items-center gap-4 text-sm font-medium" role="list">
+    {% if user.is_authenticated %}
+      <li>
+        <span class="text-indigo-200">{% trans "Hi" %}, {{ user.username }}</span>
+      </li>
+      <li>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3 py-1.5 rounded bg-indigo-500 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-white">
+            {% trans "Logout" %}
+          </button>
+        </form>
+      </li>
+    {% else %}
+      <li>
+        <a href="{% url 'login' %}"
+           class="px-3 py-1.5 rounded hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-white">
+          {% trans "Login" %}
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'register' %}"
+           class="px-3 py-1.5 rounded bg-indigo-500 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-white">
+          {% trans "Register" %}
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+
+</nav>

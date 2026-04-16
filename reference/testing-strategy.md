@@ -11,7 +11,7 @@ Run: `pytest`
 ### Unit Tests
 - Test individual pure functions and utilities
 - No I/O, no network, no database — mock all dependencies
-- Location: co-located with source files as `*.test.ts` or in `__tests__/`
+- Location: `tests/unit/` mirroring the `apps/` structure (e.g. `tests/unit/accounts/test_models.py`)
 - Target: all business logic functions, utility functions, data transformers
 
 ### Integration Tests
@@ -22,7 +22,7 @@ Run: `pytest`
 
 ### End-to-End Tests
 - Simulate real user journeys through the full application
-- Tool: Playwright
+- Tool: pytest + Django test client (v1); upgrade to Playwright post-v1 if needed
 - Location: `tests/e2e/`
 - Target: critical user flows (login, core feature workflow, settings)
 

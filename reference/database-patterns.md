@@ -3,15 +3,15 @@
 Load this file when working with the database, writing queries, or creating migrations.
 
 ## Stack
-- Database: PostgreSQL
-- ORM / Query builder: SQLAlchemy
-- Migration tool: specify your migration tool
+- Database: PostgreSQL 16
+- ORM: Django ORM (no SQLAlchemy)
+- Migration tool: `python manage.py makemigrations` / `python manage.py migrate`
 
 ## Migration Rules
 - Every schema change requires a migration file — never edit the DB directly
-- Migration naming: `YYYYMMDD_HHMMSS_description.sql` or follow ORM conventions
-- Always test both `up` and `down` migrations
-- Run: ``
+- Migration naming: Django auto-names migrations; keep generated names unless clarity demands a rename
+- Always run `python manage.py makemigrations --check` in CI to catch uncommitted schema changes
+- Run: `python manage.py migrate`
 
 ## Query Conventions
 - Use parameterized queries / ORM methods — never string-interpolated SQL

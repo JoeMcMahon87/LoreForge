@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Register" %} — LoreForge{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+  <h1 class="text-2xl font-bold mb-6">{% trans "Create your LoreForge account" %}</h1>
+
+  {% if form.errors %}
+    <div role="alert" aria-live="assertive"
+         class="mb-4 px-4 py-3 rounded border bg-red-50 border-red-400 text-red-800">
+      <p class="font-semibold">{% trans "Please correct the errors below." %}</p>
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate class="space-y-5">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">
+          {{ field.label }}{% if field.field.required %} <span aria-hidden="true" class="text-red-500">*</span>{% endif %}
+        </label>
+        {% if field.field.widget.input_type == 'select' %}
+          <select id="{{ field.id_for_label }}"
+                  name="{{ field.html_name }}"
+                  class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         {% if field.errors %}border-red-500{% else %}border-gray-300{% endif %}"
+                  {% if field.errors %}aria-describedby="{{ field.id_for_label }}-error"{% endif %}>
+            {% for choice_value, choice_label in field.field.choices %}
+              <option value="{{ choice_value }}" {% if field.value == choice_value %}selected{% endif %}>
+                {{ choice_label }}
+              </option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input type="{{ field.field.widget.input_type }}"
+                 id="{{ field.id_for_label }}"
+                 name="{{ field.html_name }}"
+                 value="{% if field.field.widget.input_type != 'password' %}{{ field.value|default:'' }}{% endif %}"
+                 autocomplete="{% if field.html_name == 'password1' or field.html_name == 'password2' %}new-password{% elif field.html_name == 'username' %}username{% elif field.html_name == 'email' %}email{% else %}off{% endif %}"
+                 class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500
+                        {% if field.errors %}border-red-500{% else %}border-gray-300{% endif %}"
+                 {% if field.errors %}aria-describedby="{{ field.id_for_label }}-error"{% endif %}
+                 {% if field.field.required %}required{% endif %}>
+        {% endif %}
+        {% if field.help_text %}
+          <p class="mt-1 text-xs text-gray-500" id="{{ field.id_for_label }}-help">{{ field.help_text }}</p>
+        {% endif %}
+        {% if field.errors %}
+          <p id="{{ field.id_for_label }}-error" class="mt-1 text-sm text-red-600" role="alert">
+            {{ field.errors|join:", " }}
+          </p>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit"
+            class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-700
+                   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+      {% trans "Create account" %}
+    </button>
+  </form>
+
+  <p class="mt-4 text-sm text-gray-600">
+    {% trans "Already have an account?" %}
+    <a href="{% url 'login' %}" class="text-indigo-600 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded">
+      {% trans "Log in here" %}
+    </a>
+  </p>
+</div>
+{% endblock %}

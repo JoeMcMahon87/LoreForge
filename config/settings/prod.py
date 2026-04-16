@@ -1,0 +1,17 @@
+from .base import *  # noqa: F401, F403
+
+DEBUG = False
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
+
+DATABASES = {
+    "default": env.db("DATABASE_URL")
+}
+
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
