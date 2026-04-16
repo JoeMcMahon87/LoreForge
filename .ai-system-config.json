@@ -1,0 +1,46 @@
+{
+  "target_dir": "/home/ubuntu/projects/LoreForge",
+  "project_name": "LoreForge",
+  "project_description": "This is a python Django website with optional, modular applications to enable users to organize their TTRPG world and campaign lore, includine but not limited to: history, lore, factions, NPCs, locations, geography, maps, campaign frames, and more.",
+  "has_frontend": true,
+  "has_api": true,
+  "has_db": true,
+  "database": "PostgreSQL",
+  "orm": "SQLAlchemy",
+  "migrate_cmd": "",
+  "transaction_notes": "Use transactions for multi-table writes",
+  "dev_cmd": "python -m uvicorn app.main:app --reload",
+  "test_cmd": "pytest",
+  "build_cmd": "python -m build",
+  "lint_cmd": "ruff check . && mypy .",
+  "testing_tool": "pytest",
+  "styling": "Tailwind CSS",
+  "components_dir": "src/components/",
+  "state_management": "React hooks + Context API",
+  "api_base": "/api",
+  "auth_notes": "JWT tokens, stored in httpOnly cookies",
+  "tech_stack": [
+    "Python",
+    "Django",
+    "PostgreSQL",
+    "SQLAlchemy"
+  ],
+  "entry_points": [
+    "main.py",
+    "app/__init__.py"
+  ],
+  "sensitive_areas": [
+    "Authentication / authorization",
+    "Payments / billing",
+    "Data privacy / PII",
+    "Database migrations",
+    "Deployment / infrastructure"
+  ],
+  "architecture_notes": "Client \u2192 API layer \u2192 service functions \u2192 database. Auth checked in middleware.",
+  "project_structure": "src/ tests/ scripts/ docs/",
+  "naming_convention": "camelCase for variables/functions, PascalCase for classes/components, kebab-case for files",
+  "e2e_tool": "Playwright",
+  "critical_flows": "login, core feature workflow, settings",
+  "install_kb": true,
+  "install_archon": true
+}

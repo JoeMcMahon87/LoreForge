@@ -1,0 +1,69 @@
+name: piv-feature
+description: |
+  Use this workflow when implementing a new feature or PRD phase.
+  It runs a full Plan-Implement-Validate loop in separate context windows,
+  enforces testing, and opens a PR. Trigger when the user says
+  "implement [feature]", "build [phase]", or "start PIV loop for [X]".
+
+provider: anthropic
+default_model: claude-sonnet-4-5
+
+nodes:
+  - id: prime-and-plan
+    type: prompt
+    prompt: |
+      Read AGENTS.md, PRD.md, git log --oneline -20 and knowledge/index.md.
+
+      Feature to implement: {{input}}
+      Create a detailed implementation plan and save it as plans/{{slug}}.md.
+      Include: goal, context, task list (with specific files), env setup, validation strategy.
+      Ask clarifying questions before writing. Zero unresolved assumptions.
+
+  - id: human-plan-review
+    type: human_approval
+    message: "Review the plan at plans/{{slug}}.md before implementation begins."
+
+  - id: implement
+    type: prompt
+    continue_session: false
+    context:
+      - file: plans/{{slug}}.md
+      - file: AGENTS.md
+      - knowledge: index
+    prompt: |
+      Execute the implementation plan at plans/{{slug}}.md exactly.
+      Follow the task list in order. Verify each task before proceeding.
+      Do not report done until the full validation strategy passes.
+
+  - id: run-tests
+    type: command
+    command: "ruff check . && mypy . && pytest"
+
+  - id: capture-kb
+    type: prompt
+    continue_session: false
+    context:
+      - file: AGENTS.md
+    prompt: |
+      The feature has been implemented and validated.
+      Read the git diff of recent changes.
+
+      Identify 1-2 pieces of knowledge worth adding to the KB:
+      - New patterns or conventions introduced
+      - Key decisions made and why
+      - Gotchas or non-obvious behaviors
+
+      Write articles to knowledge/wiki/concepts/ or knowledge/wiki/decisions/ as appropriate.
+      Update knowledge/index.md and append to knowledge/log.md.
+      Keep articles focused and specific — skip trivial details.
+
+  - id: human-final-review
+    type: human_approval
+    message: "Tests passing. Do your manual validation, then approve to commit and open a PR."
+
+  - id: commit-and-pr
+    type: command
+    command: |
+      git add -A && \
+      git commit -m "feat: {{input}}" -m "Implemented via PIV harness. Plan: plans/{{slug}}.md" && \
+      gh pr create --fill

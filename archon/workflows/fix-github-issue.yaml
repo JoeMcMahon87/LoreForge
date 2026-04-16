@@ -1,0 +1,53 @@
+name: fix-github-issue
+description: |
+  Use this workflow to investigate and fix a GitHub issue.
+  It classifies the issue, investigates root cause, implements a fix,
+  validates, and opens a PR. Trigger when the user says
+  "fix issue #N" or "resolve GitHub issue #N".
+
+provider: anthropic
+default_model: claude-sonnet-4-5
+
+nodes:
+  - id: classify
+    type: prompt
+    model: claude-haiku-4-5
+    prompt: |
+      Extract the issue number from: {{input}}      Fetch the issue with: gh issue view [number]
+      Classify: is this a BUG (something broken) or FEATURE (something new)?
+      Output: issue_number, title, classification, brief summary
+
+  - id: investigate
+    type: prompt
+    prompt: |
+      Investigate the issue: {{nodes.classify.summary}}
+      Search the codebase for the root cause.
+      Check knowledge/wiki/ for related past decisions or known issues.
+      Output: root cause analysis, affected files, proposed fix approach
+
+  - id: implement
+    type: prompt
+    continue_session: false
+    context:
+      - file: AGENTS.md
+      - knowledge: index
+    prompt: |
+      Fix the issue based on this investigation:
+{{nodes.investigate.output}}
+      Make the minimal change that fixes the problem without side effects.
+      Run pytest after implementing.
+
+  - id: run-tests
+    type: command
+    command: "pytest"
+
+  - id: human-approval
+    type: human_approval
+    message: "Fix implemented and tests passing. Review before opening the PR."
+
+  - id: open-pr
+    type: command
+    command: |
+      gh pr create \
+        --title "fix: {{nodes.classify.title}}" \
+        --body "Fixes #{{nodes.classify.issue_number}}. See investigation notes in PR description."

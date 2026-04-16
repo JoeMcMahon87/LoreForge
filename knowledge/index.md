@@ -1,0 +1,25 @@
+# Knowledge Base Index — LoreForge
+Last updated: (auto-maintained by flush script)
+
+This file is loaded at the start of every coding session.
+Use it to navigate to relevant articles before answering questions or making decisions.
+
+## Concepts
+*(Key patterns, abstractions, and architectural ideas — populated after first flush)*
+
+## Architectural Decisions
+*(Why we chose X over Y — populated after first flush)*
+
+## Patterns and Conventions
+*(Code patterns specific to this codebase — populated after first flush)*
+
+## Known Issues and Workarounds
+*(Gotchas, non-obvious behaviors, known limitations — populated after first flush)*
+
+## External Integrations
+*(Notes on third-party APIs, services, and SDKs we use — populated after first flush)*
+
+---
+*Auto-maintained by `scripts/flush.py`. Do not edit manually — changes will be overwritten.*
+*To add an article: write it to `knowledge/wiki/[category]/[slug].md`,
+then add a one-line entry here.*
