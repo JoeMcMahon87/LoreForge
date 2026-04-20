@@ -29,8 +29,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Local apps
     "apps.accounts",
+    "apps.home",
+    "apps.worlds",
     # Future apps (stubs — uncomment as phases are implemented)
-    # "apps.worlds",
     # "apps.worldbook",
     # "apps.npcs",
     # "apps.timeline",

@@ -11,6 +11,8 @@ Use it to navigate to relevant articles before answering questions or making dec
 
 - [Custom User Model](wiki/decisions/custom-user-model.md) — AUTH_USER_MODEL set before first migration; role field (admin/gm/player)
 - [Test Settings — SQLite vs PostgreSQL](wiki/decisions/test-settings.md) — tests use SQLite :memory:; PostgreSQL-specific tests need dev settings
+- [World Permission Mixins](wiki/decisions/world-permission-mixins.md) — GMMixin, WorldOwnerMixin, WorldMemberMixin pattern; dispatch order matters
+- [CampaignForm Status Field](wiki/decisions/campaign-form-status-field.md) — status not required in form; template hides it on create
 
 ## Patterns and Conventions
 *(Code patterns specific to this codebase — populated after first flush)*

@@ -11,6 +11,12 @@
         <span class="text-indigo-200">{% trans "Hi" %}, {{ user.username }}</span>
       </li>
       <li>
+        <a href="{% url 'world-list' %}"
+           class="px-3 py-1.5 rounded hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-white">
+          {% trans "My Worlds" %}
+        </a>
+      </li>
+      <li>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit"
