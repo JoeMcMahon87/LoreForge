@@ -20,3 +20,7 @@ plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
 django_settings_module = "config.settings.dev"
+
+[[tool.mypy.overrides]]
+module = ["environ.*"]
+ignore_missing_imports = true

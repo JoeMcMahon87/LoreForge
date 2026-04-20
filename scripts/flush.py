@@ -7,9 +7,9 @@ Usage:
     python scripts/flush.py              # process last 3 days
     python scripts/flush.py --days 7     # process last 7 days
 """
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -92,4 +92,4 @@ if result.returncode != 0:
     sys.exit(1)
 
 print(result.stdout)
-print(f"\n✓ Flush complete — check knowledge/wiki/ for new articles.")
+print("\n✓ Flush complete — check knowledge/wiki/ for new articles.")

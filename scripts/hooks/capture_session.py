@@ -4,8 +4,8 @@ Session end / pre-compact hook — summarizes the session into a daily log entry
 Requires Claude Code CLI (uses your Anthropic subscription, no separate API key).
 Configured in .claude/settings.json under hooks.sessionEnd and hooks.preCompact.
 """
-import sys
 import subprocess
+import sys
 from datetime import date
 from pathlib import Path
 

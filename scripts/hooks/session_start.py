@@ -3,7 +3,6 @@
 Session start hook — loads AGENTS.md and knowledge/index.md into context.
 Configured in .claude/settings.json under hooks.sessionStart.
 """
-import sys
 from pathlib import Path
 
 parts = []
