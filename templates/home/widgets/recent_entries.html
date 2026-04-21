@@ -1,0 +1,13 @@
+{% load i18n %}
+<section class="mb-6" aria-labelledby="recent-entries-heading">
+  <h2 id="recent-entries-heading" class="text-xl font-bold text-gray-900 mb-3">{% trans "Recent Entries" %}</h2>
+  {% if entries %}
+    <ul class="space-y-2" role="list">
+      {% for entry in entries %}
+        <li class="p-3 bg-white border border-gray-200 rounded-lg">{{ entry }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500 text-sm">{% trans "No entries yet." %}</p>
+  {% endif %}
+</section>

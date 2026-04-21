@@ -1,12 +1,12 @@
 from django import forms
 
-from apps.worlds.models import Campaign, World
+from apps.worlds.models import Campaign, WorldConfig
 
 
-class WorldForm(forms.ModelForm):
+class WorldConfigForm(forms.ModelForm):
     class Meta:
-        model = World
-        fields = ["name", "description"]
+        model = WorldConfig
+        fields = ["name", "tagline", "description", "theme_color", "logo"]
 
 
 class CampaignForm(forms.ModelForm):

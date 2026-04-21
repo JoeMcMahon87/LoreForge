@@ -1,0 +1,10 @@
+{% load i18n %}
+{% if image_url %}
+<figure class="mb-6">
+  <img src="{{ image_url }}" alt="{{ alt }}"
+       class="w-full rounded-lg object-cover max-h-64">
+  {% if caption %}
+    <figcaption class="text-sm text-gray-500 mt-2 text-center">{{ caption }}</figcaption>
+  {% endif %}
+</figure>
+{% endif %}

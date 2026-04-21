@@ -22,21 +22,14 @@ def player_user(db):
 
 
 @pytest.fixture
-def world(db, gm_user):
-    from apps.worlds.services import create_world
+def world_config(db):
+    from apps.worlds.models import WorldConfig
 
-    return create_world(owner=gm_user, name="Test World")
+    return WorldConfig.get_solo()
 
 
 @pytest.fixture
-def campaign(db, world):
+def campaign(db):
     from apps.worlds.services import create_campaign
 
-    return create_campaign(world=world, name="Test Campaign")
-
-
-@pytest.fixture
-def player_member(db, world, player_user):
-    from apps.worlds.services import add_member
-
-    return add_member(world=world, user=player_user, role="player")
+    return create_campaign(name="Test Campaign")

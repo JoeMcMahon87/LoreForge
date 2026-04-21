@@ -10,7 +10,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", HomeView.as_view(), name="home"),
     path("accounts/", include("apps.accounts.urls")),
-    path("worlds/", include("apps.worlds.urls")),
+    path("world/", include("apps.worlds.urls")),
+    path("homepage/", include("apps.home.urls")),
 ]
 
 if settings.DEBUG:

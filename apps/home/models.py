@@ -26,3 +26,23 @@ class SiteConfig(models.Model):
     def get_solo(cls) -> "SiteConfig":
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class HomePageWidget(models.Model):
+    class Visibility(models.TextChoices):
+        GM_ONLY = "gm_only", _("GM only")
+        PLAYER = "player", _("Player")
+        PUBLIC = "public", _("Public")
+
+    widget_type = models.CharField(max_length=50)
+    order = models.PositiveIntegerField(default=0)
+    config = models.JSONField(default=dict)
+    visibility = models.CharField(
+        max_length=10, choices=Visibility.choices, default=Visibility.PUBLIC
+    )
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self) -> str:
+        return f"{self.widget_type} (order={self.order})"

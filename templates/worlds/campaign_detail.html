@@ -1,54 +1,55 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ campaign.name }} — {{ world.name }} — LoreForge{% endblock %}
+{% block title %}{{ campaign.name }} — LoreForge{% endblock %}
 
 {% block content %}
-<nav aria-label="{% trans 'Breadcrumb' %}" class="text-sm text-gray-500 mb-4">
-  <a href="{% url 'world-list' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{% trans "My Worlds" %}</a>
-  <span aria-hidden="true"> / </span>
-  <a href="{% url 'world-detail' world_slug=world.slug %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{{ world.name }}</a>
-  <span aria-hidden="true"> / </span>
-  <span aria-current="page">{{ campaign.name }}</span>
-</nav>
+<div class="max-w-3xl mx-auto py-8">
+  <nav aria-label="{% trans 'Breadcrumb' %}" class="text-sm text-gray-500 mb-4">
+    <a href="{% url 'campaign-list' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{% trans "Campaigns" %}</a>
+    <span aria-hidden="true"> / </span>
+    <span aria-current="page">{{ campaign.name }}</span>
+  </nav>
 
-<div class="flex items-start justify-between mb-6">
-  <div>
-    <div class="flex items-center gap-3">
-      <h1 class="text-3xl font-bold text-gray-900">{{ campaign.name }}</h1>
-      <span class="px-2 py-0.5 rounded-full text-sm font-medium
-        {% if campaign.status == 'active' %}bg-green-100 text-green-700
-        {% elif campaign.status == 'complete' %}bg-gray-100 text-gray-600
-        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
-        {{ campaign.get_status_display }}
-      </span>
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-3xl font-bold text-gray-900">{{ campaign.name }}</h1>
+        <span class="px-2 py-0.5 rounded-full text-sm font-medium
+          {% if campaign.status == 'active' %}bg-green-100 text-green-700
+          {% elif campaign.status == 'complete' %}bg-gray-100 text-gray-600
+          {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+          {{ campaign.get_status_display }}
+        </span>
+      </div>
+      {% if campaign.description %}
+        <p class="text-gray-600 mt-2">{{ campaign.description }}</p>
+      {% endif %}
     </div>
-    {% if campaign.description %}
-      <p class="text-gray-600 mt-2">{{ campaign.description }}</p>
+    {% if request.user.is_authenticated %}
+      {% if request.user.is_gm or request.user.is_admin_user %}
+        <div class="flex gap-3 text-sm ml-4 shrink-0">
+          <a href="{% url 'campaign-update' campaign_slug=campaign.slug %}"
+             class="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            {% trans "Edit Campaign" %}
+          </a>
+          <a href="{% url 'campaign-delete' campaign_slug=campaign.slug %}"
+             class="px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500">
+            {% trans "Delete Campaign" %}
+          </a>
+        </div>
+      {% endif %}
     {% endif %}
   </div>
-  {% if world.owner == request.user %}
-    <div class="flex gap-3 text-sm ml-4 shrink-0">
-      <a href="{% url 'campaign-update' world_slug=world.slug campaign_slug=campaign.slug %}"
-         class="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        {% trans "Edit Campaign" %}
-      </a>
-      <a href="{% url 'campaign-delete' world_slug=world.slug campaign_slug=campaign.slug %}"
-         class="px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500">
-        {% trans "Delete Campaign" %}
-      </a>
-    </div>
-  {% endif %}
+
+  <section aria-labelledby="entries-heading" class="mb-8 p-5 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+    <h2 id="entries-heading" class="text-base font-semibold text-gray-500 mb-1">{% trans "Worldbook Entries" %}</h2>
+    <p class="text-sm text-gray-400">{% trans "Coming in a future update." %}</p>
+  </section>
+
+  <section aria-labelledby="timeline-heading" class="p-5 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+    <h2 id="timeline-heading" class="text-base font-semibold text-gray-500 mb-1">{% trans "Timeline" %}</h2>
+    <p class="text-sm text-gray-400">{% trans "Coming in a future update." %}</p>
+  </section>
 </div>
-
-<!-- Placeholder sections -->
-<section aria-labelledby="entries-heading" class="mb-8 p-5 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-  <h2 id="entries-heading" class="text-base font-semibold text-gray-500 mb-1">{% trans "Worldbook Entries" %}</h2>
-  <p class="text-sm text-gray-400">{% trans "Coming in a future update." %}</p>
-</section>
-
-<section aria-labelledby="timeline-heading" class="p-5 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-  <h2 id="timeline-heading" class="text-base font-semibold text-gray-500 mb-1">{% trans "Timeline" %}</h2>
-  <p class="text-sm text-gray-400">{% trans "Coming in a future update." %}</p>
-</section>
 {% endblock %}

@@ -1,21 +1,15 @@
 from django.contrib import admin
 
-from apps.worlds.models import Campaign, World, WorldMembership
+from apps.worlds.models import Campaign, WorldConfig
 
 
-@admin.register(World)
-class WorldAdmin(admin.ModelAdmin):
-    list_display = ["name", "slug", "owner", "created_at"]
-    prepopulated_fields = {"slug": ("name",)}
+@admin.register(WorldConfig)
+class WorldConfigAdmin(admin.ModelAdmin):
+    list_display = ["name", "tagline", "theme_color", "updated_at"]
 
 
 @admin.register(Campaign)
 class CampaignAdmin(admin.ModelAdmin):
-    list_display = ["name", "world", "status", "created_at"]
-    list_filter = ["status", "world"]
-
-
-@admin.register(WorldMembership)
-class WorldMembershipAdmin(admin.ModelAdmin):
-    list_display = ["user", "world", "role"]
-    list_filter = ["role", "world"]
+    list_display = ["name", "slug", "status", "created_at"]
+    list_filter = ["status"]
+    prepopulated_fields = {"slug": ("name",)}

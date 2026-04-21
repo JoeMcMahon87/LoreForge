@@ -1,5 +1,5 @@
 # PRD — LoreForge
-*Last updated: 2026-04-16*
+*Last updated: 2026-04-20*
 
 ---
 
@@ -7,10 +7,12 @@
 
 Game Masters running tabletop RPG campaigns accumulate enormous amounts of world-building material — NPCs, locations, factions, histories, maps, session notes — spread across notebooks, wikis, spreadsheets, and sticky notes. Finding the right piece of lore mid-session breaks immersion and slows play. No existing tool gives GMs a single, fast, structured hub that is **system-agnostic**, **self-hostable**, and extensible with **TTRPG-system-specific modules**.
 
+LoreForge is a **single-world instance**: each deployment is dedicated to one GM's world. A GM self-hosts one instance per world they've built. There is no multi-world hosting, account marketplace, or SaaS tier. This keeps the data model simple, permissions local, and the homepage meaningful — it's a portal into *this* world, not a list of worlds to choose from.
+
 **Who it's for:**
-- **GMs** — primary power users building and running campaigns
+- **GMs** — primary power users building and running campaigns; own the instance
 - **Players** — consume curated lore their GM shares with them
-- **Admins** — manage users and installed system modules
+- **Admins** — manage users and installed system modules (often the same person as the GM)
 - **Public visitors** — read-only access to content a GM explicitly makes public
 
 ---
@@ -22,13 +24,14 @@ The minimum feature set for a working, useful v1:
 | Feature | Description |
 |---|---|
 | **Auth & Roles** | Registration, login, logout. Roles: admin, GM, player, public (unauthenticated). |
-| **Worlds & Campaigns** | GMs create one or more worlds; each world has one or more campaigns. |
+| **World Config & Campaigns** | One world per instance (singleton config: name, tagline, theme). Multiple campaigns within that world. |
+| **Configurable Homepage** | Admin-editable landing page built from draggable content widgets. Widgets contributed by core and installed modules (rich text, maps, tables, recent entries, etc.). |
 | **Worldbook Entries** | CRUD for Locations, Factions, Items, and Lore/History entries. Per-entry visibility (GM-only, player, public). Rich text content. |
 | **NPC Management** | Full NPC records: appearance, motivations, secrets. NPC-to-NPC relationships. Session appearance logs. |
 | **Timeline** | Eras and events, each event linkable to entries. Visual timeline display. |
 | **Maps** | (a) Uploaded image maps with drag-and-drop pins linked to entries. (b) Geospatial map view (Leaflet.js) for locations with lat/lng coordinates. |
-| **Full-Text Search** | Fast search across all worldbook entries, NPCs, and timeline events within a world. |
-| **Plugin Module System** | Installable per-world modules that extend entries with system-specific fields (e.g. stat blocks). Ships with a D&D 5e reference module. |
+| **Full-Text Search** | Fast search across all worldbook entries, NPCs, and timeline events. |
+| **Plugin Module System** | Installable modules that extend entries with system-specific fields (e.g. stat blocks) and contribute homepage widgets. Ships with a D&D 5e reference module. |
 | **i18n Scaffolding** | Django's i18n infrastructure wired up; all strings translation-ready. English only in v1. |
 | **WCAG 2.2 Compliance** | AA level accessibility across all templates. |
 | **Local + AWS Deployable** | Docker Compose for local dev/self-hosting; documented AWS path (EC2/ECS + RDS). |
@@ -91,7 +94,8 @@ loreforge/
 │   └── wsgi.py
 ├── apps/                          # All Django apps live here
 │   ├── accounts/                  # User model, roles, auth views
-│   ├── worlds/                    # World + Campaign models
+│   ├── worlds/                    # World singleton config + Campaign models
+│   ├── homepage/                  # Configurable landing page + widget registry
 │   ├── worldbook/                 # Entry base + Location, Faction, Item, Lore
 │   ├── npcs/                      # NPC model, relationships, session logs
 │   ├── timeline/                  # Era + Event models
@@ -151,14 +155,15 @@ Browser → Gunicorn → Django middleware (auth, i18n) → URL router
 
 | Role | Capabilities |
 |---|---|
-| `admin` | Full site access, user management, module installation |
-| `gm` | Create/manage worlds, campaigns, all entries within their worlds |
-| `player` | Read-only access to entries marked `visibility=player` in worlds they're invited to |
+| `admin` | Full site access, user management, module installation, homepage editing |
+| `gm` | Create/manage campaigns, all entries; edit homepage widgets |
+| `player` | Read-only access to entries marked `visibility=player` |
 | `public` (anonymous) | Read-only access to entries marked `visibility=public` |
 
 - Built on Django's `AbstractUser` + a `role` field.
 - Per-object visibility controlled by `visibility` field on `Entry` model: `gm_only | player | public`.
-- World membership tracked via `WorldMembership(user, world, role)` join table.
+- No per-world membership table — the entire instance is one world. User roles are site-wide.
+- Players are invited by the GM; they gain a site account with `role=player`.
 
 ### 6.3 Core Database Schema
 
@@ -166,17 +171,21 @@ Browser → Gunicorn → Django middleware (auth, i18n) → URL router
 User
   id, email, username, role, created_at
 
-World
-  id, name, slug, description, owner(FK User), created_at
+WorldConfig  [singleton — exactly one row; managed via admin / setup wizard]
+  id, name, tagline, description, theme_color, logo(ImageField), created_at
 
 Campaign
-  id, name, world(FK), description, status(active|complete|hiatus), created_at
+  id, name, slug, description, status(active|complete|hiatus), created_at
 
-WorldMembership
-  id, user(FK), world(FK), role(gm|player)
+HomePage  [singleton — exactly one row]
+  id, title, subtitle
+
+HomePageWidget
+  id, homepage(FK), widget_type, order, config(JSONB), visibility(gm_only|player|public)
+  [widget_type references the widget registry; config is type-specific]
 
 Entry  [abstract base — concrete tables per type]
-  id, title, slug, content(text), visibility, world(FK), created_by(FK),
+  id, title, slug, content(text), visibility, created_by(FK),
   tags(M2M Tag), created_at, updated_at
 
 Location(Entry)
@@ -204,49 +213,59 @@ SessionAppearance
   session_log(FK), npc(FK), notes
 
 Era
-  id, name, world(FK), start_label, end_label, order
+  id, name, start_label, end_label, order
 
 TimelineEvent
   id, name, era(FK), date_label, description, entries(M2M Entry)
 
 MapImage
-  id, world(FK), title, image(ImageField), created_at
+  id, title, image(ImageField), created_at
 
 MapPin
   id, map_image(FK), x_pct(float), y_pct(float), entry(FK Entry), label
 
 InstalledModule
-  id, world(FK), module_slug, version, config(JSONB)
+  id, module_slug, version, config(JSONB), enabled(bool)
 ```
 
 ### 6.4 Plugin Module System
 
 - Each system module is a Python package under `system_modules/<slug>/`.
-- Modules declare themselves via a `ModuleManifest` class: name, slug, version, entry_extensions.
+- Modules declare themselves via a `ModuleManifest` class: name, slug, version, entry_extensions, **homepage_widgets**.
 - Modules can register **entry extension models** (e.g. `DnD5eStatBlock` with FK to `NPC`) that add system-specific fields without modifying core models.
+- Modules can register **homepage widgets** — named widget types that appear in the widget picker when editing the homepage.
 - A `ModuleRegistry` (singleton, loaded at startup) discovers and validates installed modules.
-- Per-world installation tracked in `InstalledModule`; modules can be enabled/disabled per world.
+- Installation is site-wide (`InstalledModule`); modules can be enabled/disabled globally.
 
-### 6.5 Maps Architecture
+### 6.5 Homepage Widget System
+
+- The homepage is a `HomePage` singleton with an ordered list of `HomePageWidget` rows.
+- Each widget has a `widget_type` string (e.g. `rich_text`, `recent_entries`, `map_preview`, `campaign_list`) resolved through a **widget registry**.
+- Core ships with: `rich_text`, `recent_entries`, `campaign_list`, `image_banner`.
+- Installed modules can register additional widget types (e.g. `dnd5e.encounter_summary`).
+- Widget config is stored as JSONB; each widget type declares its config schema.
+- The GM/admin edits the homepage via a drag-and-drop widget editor (server-rendered with minimal JS).
+- Visibility per widget mirrors entry visibility: `gm_only`, `player`, `public`.
+
+### 6.6 Maps Architecture
 
 - **Image maps**: Upload PNG/JPG → stored via django-storages. Pins stored as `(x_pct, y_pct)` percentage coordinates so they survive image resizing. Rendered client-side with a lightweight JS overlay.
 - **Geospatial maps**: `Location` entries with `lat`/`lng` rendered via Leaflet.js. No PostGIS in v1 (plain float fields); PostGIS can be added later for spatial queries.
 
-### 6.6 Search
+### 6.7 Search
 
 - PostgreSQL full-text search using Django's `SearchVector` / `SearchQuery`.
 - Search index covers `Entry.title`, `Entry.content`, `NPC` fields, `TimelineEvent.name`.
-- Scoped to a single world per query (no cross-world search in v1).
 - `apps/search/` provides a single search view + service function.
 
-### 6.7 i18n
+### 6.8 i18n
 
 - `USE_I18N = True` in all settings.
 - All user-facing strings wrapped in `_()` / `{% trans %}`.
 - `locale/` directory pre-created; `django-admin makemessages` ready to run.
 - Language selection via URL prefix (`/en/`, `/fr/`) using `i18n_patterns`.
 
-### 6.8 Deployment Targets
+### 6.9 Deployment Targets
 
 **Local / self-hosted:**
 ```
@@ -287,17 +306,19 @@ Each phase is a single PIV loop (half-day to one day). Dependencies noted.
 
 ---
 
-### Phase 2 — Worlds & Campaigns
-**Goal**: GMs can create and manage worlds; player membership works.
+### Phase 2 — World Config, Campaigns & Configurable Homepage
+**Goal**: Instance-level world settings; GM can manage campaigns; homepage is editable.
 
-- `World`, `Campaign`, `WorldMembership` models + migrations
-- World CRUD views (GM-only create/edit/delete; player/public read)
-- Campaign CRUD scoped to a world
-- World dashboard page (hub for all world content)
-- Role-based permission mixins (`GMMixin`, `WorldMemberMixin`)
-- Tests: world creation, membership, permission enforcement
+- `WorldConfig` singleton model + admin/settings view (name, tagline, description, logo)
+- `Campaign` model + migrations; Campaign CRUD (GM-only create/edit/delete; player/public read)
+- `HomePage` + `HomePageWidget` singleton models + migrations
+- Widget registry (core widgets: `rich_text`, `recent_entries`, `campaign_list`, `image_banner`)
+- Homepage editor: add/remove/reorder widgets, set visibility per widget
+- Homepage rendered from widget list; public view respects widget visibility
+- Role-based permission mixins (`GMMixin`, `PlayerMixin`) — site-wide, not per-world
+- Tests: world config update, campaign CRUD, widget add/remove/reorder, visibility filtering
 
-*Deliverable*: GM can create a world, invite a player; player sees world dashboard.
+*Deliverable*: GM configures the world name, edits the homepage widgets, and creates campaigns; player sees the homepage with player-visible widgets only.
 
 ---
 
@@ -310,7 +331,7 @@ Each phase is a single PIV loop (half-day to one day). Dependencies noted.
 - Generic entry list/detail/create/edit/delete views
 - Entry type-specific forms and templates
 - Visibility-filtered querysets in all list views
-- Tests: CRUD, visibility filtering, slug uniqueness per world
+- Tests: CRUD, visibility filtering, slug uniqueness per entry type
 
 *Deliverable*: GM can create all entry types; player sees only player-visible entries.
 
@@ -366,24 +387,25 @@ Each phase is a single PIV loop (half-day to one day). Dependencies noted.
 - Results page with type badges and entry links
 - Search bar in base template (always visible)
 - Keyboard shortcut (e.g. `/` focuses search input) — WCAG compliant
-- Tests: search returns correct results; scoped to current world; empty state handled
+- Tests: search returns correct results; respects entry visibility; empty state handled
 
 *Deliverable*: GM can search any entry by keyword during a session.
 
 ---
 
 ### Phase 8 — Plugin Module System
-**Goal**: Installable per-world modules; D&D 5e reference module.
+**Goal**: Installable site-wide modules; D&D 5e reference module; modules contribute homepage widgets.
 
 - `ModuleManifest` base class and `ModuleRegistry` loader
-- `InstalledModule` model; admin UI to enable/disable per world
+- `InstalledModule` model; admin UI to enable/disable site-wide
 - Extension model pattern (module-owned models FK to core models)
-- D&D 5e module: `DnD5eStatBlock` (FK to `NPC`) with standard 5e fields
+- Module homepage widget registration (`homepage_widgets` in manifest)
+- D&D 5e module: `DnD5eStatBlock` (FK to `NPC`) with standard 5e fields; `dnd5e.encounter_summary` homepage widget
 - Module-contributed templates injected into NPC/entry detail pages
 - Module management page (admin + GM)
-- Tests: module discovery, install/uninstall, stat block CRUD, template injection
+- Tests: module discovery, install/uninstall, stat block CRUD, template injection, widget registration
 
-*Deliverable*: GM installs D&D 5e module on a world; NPCs show stat block section.
+*Deliverable*: GM installs D&D 5e module; NPCs show stat block section; D&D 5e widget appears in homepage widget picker.
 
 ---
 
@@ -406,13 +428,15 @@ Each phase is a single PIV loop (half-day to one day). Dependencies noted.
 
 | Action | public | player | gm | admin |
 |---|---|---|---|---|
-| View public entries | ✓ | ✓ | ✓ | ✓ |
-| View player entries | — | ✓ (member) | ✓ | ✓ |
-| View GM-only entries | — | — | ✓ (owner) | ✓ |
+| View public entries / widgets | ✓ | ✓ | ✓ | ✓ |
+| View player entries / widgets | — | ✓ | ✓ | ✓ |
+| View GM-only entries / widgets | — | — | ✓ | ✓ |
 | Create/edit entries | — | — | ✓ | ✓ |
-| Create world | — | — | ✓ | ✓ |
-| Invite players | — | — | ✓ (owner) | ✓ |
-| Install modules | — | — | ✓ (owner) | ✓ |
+| Edit homepage widgets | — | — | ✓ | ✓ |
+| Edit world config | — | — | ✓ | ✓ |
+| Create/manage campaigns | — | — | ✓ | ✓ |
+| Invite players | — | — | ✓ | ✓ |
+| Install/disable modules | — | — | — | ✓ |
 | Manage users | — | — | — | ✓ |
 
 ---

@@ -11,11 +11,25 @@
         <span class="text-indigo-200">{% trans "Hi" %}, {{ user.username }}</span>
       </li>
       <li>
-        <a href="{% url 'world-list' %}"
+        <a href="{% url 'campaign-list' %}"
            class="px-3 py-1.5 rounded hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-white">
-          {% trans "My Worlds" %}
+          {% trans "Campaigns" %}
         </a>
       </li>
+      {% if user.is_gm or user.is_admin_user %}
+        <li>
+          <a href="{% url 'world-settings' %}"
+             class="px-3 py-1.5 rounded hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-white">
+            {% trans "World Settings" %}
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'homepage-editor' %}"
+             class="px-3 py-1.5 rounded hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-white">
+            {% trans "Edit Homepage" %}
+          </a>
+        </li>
+      {% endif %}
       <li>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}

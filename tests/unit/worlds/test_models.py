@@ -1,71 +1,57 @@
 import pytest
 
-from apps.accounts.models import CustomUser
-from apps.worlds.models import Campaign, World, WorldMembership
-
-
-@pytest.fixture
-def owner(db):
-    return CustomUser.objects.create_user(username="owner", password="pass1234!", role="gm")
+from apps.worlds.models import Campaign, WorldConfig
 
 
 @pytest.mark.django_db
-class TestWorldModel:
-    def test_str_returns_name(self, owner):
-        world = World.objects.create(owner=owner, name="Forgotten Realms")
-        assert str(world) == "Forgotten Realms"
+class TestWorldConfig:
+    def test_get_solo_creates_singleton(self):
+        config = WorldConfig.get_solo()
+        assert config.pk == 1
 
-    def test_slug_auto_generated_from_name(self, owner):
-        world = World.objects.create(owner=owner, name="The Lost Kingdom")
-        assert world.slug == "the-lost-kingdom"
+    def test_get_solo_does_not_create_second_row(self):
+        WorldConfig.get_solo()
+        WorldConfig.get_solo()
+        assert WorldConfig.objects.count() == 1
 
-    def test_slug_collision_gets_suffix(self, owner):
-        w1 = World.objects.create(owner=owner, name="My World")
-        w2 = World.objects.create(owner=owner, name="My World")
-        assert w1.slug == "my-world"
-        assert w2.slug == "my-world-2"
+    def test_str_returns_name(self):
+        config = WorldConfig.get_solo()
+        config.name = "Faerun"
+        config.save()
+        assert str(config) == "Faerun"
+
+    def test_default_name(self):
+        config = WorldConfig.get_solo()
+        assert config.name == "My World"
+
+    def test_default_theme_color(self):
+        config = WorldConfig.get_solo()
+        assert config.theme_color == "#4f46e5"
 
 
 @pytest.mark.django_db
 class TestCampaignModel:
-    def test_str_returns_name(self, owner):
-        world = World.objects.create(owner=owner, name="Eberron")
-        campaign = Campaign.objects.create(world=world, name="Session Zero")
+    def test_str_returns_name(self):
+        campaign = Campaign.objects.create(name="Session Zero")
         assert str(campaign) == "Session Zero"
 
-    def test_slug_auto_generated_from_name(self, owner):
-        world = World.objects.create(owner=owner, name="Eberron")
-        campaign = Campaign.objects.create(world=world, name="The First Quest")
+    def test_slug_auto_generated_from_name(self):
+        campaign = Campaign.objects.create(name="The First Quest")
         assert campaign.slug == "the-first-quest"
 
-    def test_default_status_is_active(self, owner):
-        world = World.objects.create(owner=owner, name="Eberron")
-        campaign = Campaign.objects.create(world=world, name="My Campaign")
+    def test_default_status_is_active(self):
+        campaign = Campaign.objects.create(name="My Campaign")
         assert campaign.status == Campaign.Status.ACTIVE
 
-    def test_slug_collision_scoped_to_world(self, owner):
-        w1 = World.objects.create(owner=owner, name="World One")
-        w2 = World.objects.create(owner=owner, name="World Two")
-        c1 = Campaign.objects.create(world=w1, name="Session Zero")
-        c2 = Campaign.objects.create(world=w2, name="Session Zero")
-        # Two different worlds can share the same campaign slug
-        assert c1.slug == "session-zero"
-        assert c2.slug == "session-zero"
-
-    def test_slug_collision_within_world_gets_suffix(self, owner):
-        world = World.objects.create(owner=owner, name="Greyhawk")
-        c1 = Campaign.objects.create(world=world, name="Session Zero")
-        c2 = Campaign.objects.create(world=world, name="Session Zero")
+    def test_slug_globally_unique_gets_suffix(self):
+        c1 = Campaign.objects.create(name="Session Zero")
+        c2 = Campaign.objects.create(name="Session Zero")
         assert c1.slug == "session-zero"
         assert c2.slug == "session-zero-2"
 
-
-@pytest.mark.django_db
-class TestWorldMembership:
-    def test_unique_together_prevents_duplicate_membership(self, owner):
-        from django.db import IntegrityError
-
-        world = World.objects.create(owner=owner, name="Faerun")
-        WorldMembership.objects.create(user=owner, world=world, role="gm")
-        with pytest.raises(IntegrityError):
-            WorldMembership.objects.create(user=owner, world=world, role="player")
+    def test_slug_stable_on_rename(self):
+        campaign = Campaign.objects.create(name="Original Name")
+        original_slug = campaign.slug
+        campaign.name = "New Name"
+        campaign.save()
+        assert campaign.slug == original_slug

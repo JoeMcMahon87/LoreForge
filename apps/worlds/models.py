@@ -1,36 +1,26 @@
-from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 
-class World(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+class WorldConfig(models.Model):
+    name = models.CharField(max_length=200, default="My World")
+    tagline = models.CharField(max_length=400, blank=True)
     description = models.TextField(blank=True)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="owned_worlds",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
+    theme_color = models.CharField(max_length=7, default="#4f46e5")
+    logo = models.ImageField(upload_to="world/", blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        verbose_name = "World Configuration"
 
     def __str__(self) -> str:
         return self.name
 
-    def save(self, *args, **kwargs):
-        if self._state.adding or not self.slug:
-            base_slug = slugify(self.name)
-            slug = base_slug
-            counter = 2
-            while World.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-            self.slug = slug
-        super().save(*args, **kwargs)
+    @classmethod
+    def get_solo(cls) -> "WorldConfig":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
 
 
 class Campaign(models.Model):
@@ -40,8 +30,7 @@ class Campaign(models.Model):
         HIATUS = "hiatus", _("Hiatus")
 
     name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200)
-    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="campaigns")
+    slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True)
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.ACTIVE
@@ -50,7 +39,6 @@ class Campaign(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-        unique_together = [("world", "slug")]
 
     def __str__(self) -> str:
         return self.name
@@ -60,30 +48,8 @@ class Campaign(models.Model):
             base_slug = slugify(self.name)
             slug = base_slug
             counter = 2
-            while Campaign.objects.filter(world=self.world, slug=slug).exclude(pk=self.pk).exists():
+            while Campaign.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
-
-
-class WorldMembership(models.Model):
-    class Role(models.TextChoices):
-        GM = "gm", _("Game Master")
-        PLAYER = "player", _("Player")
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="world_memberships",
-    )
-    world = models.ForeignKey(
-        World, on_delete=models.CASCADE, related_name="memberships"
-    )
-    role = models.CharField(max_length=10, choices=Role.choices)
-
-    class Meta:
-        unique_together = [("user", "world")]
-
-    def __str__(self) -> str:
-        return f"{self.user} — {self.world} ({self.role})"

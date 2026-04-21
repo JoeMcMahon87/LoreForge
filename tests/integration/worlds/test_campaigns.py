@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from apps.worlds.services import add_member, create_campaign, create_world
+from apps.worlds.services import create_campaign
 
 
 @pytest.fixture
@@ -11,56 +11,60 @@ def client():
 
 @pytest.mark.django_db
 class TestCampaignCreateView:
-    def test_owner_can_create_campaign(self, client, gm_user):
-        world = create_world(owner=gm_user, name="Faerun")
+    def test_gm_can_create_campaign(self, client, gm_user):
         client.force_login(gm_user)
         response = client.post(
-            f"/worlds/{world.slug}/campaigns/create/",
+            "/world/campaigns/create/",
             {"name": "Session Zero", "description": ""},
         )
         assert response.status_code == 302
-        assert f"/worlds/{world.slug}/campaigns/session-zero/" in response["Location"]
+        assert "/world/campaigns/session-zero/" in response["Location"]
 
-    def test_player_gets_403(self, client, gm_user, player_user):
-        world = create_world(owner=gm_user, name="Faerun")
-        add_member(world=world, user=player_user, role="player")
+    def test_player_gets_403(self, client, player_user):
         client.force_login(player_user)
         response = client.post(
-            f"/worlds/{world.slug}/campaigns/create/",
+            "/world/campaigns/create/",
             {"name": "Hack", "description": ""},
         )
         assert response.status_code == 403
 
+    def test_anonymous_redirects_to_login(self, client):
+        response = client.post(
+            "/world/campaigns/create/",
+            {"name": "Session Zero", "description": ""},
+        )
+        assert response.status_code == 302
+        assert "/accounts/login/" in response["Location"]
+
 
 @pytest.mark.django_db
 class TestCampaignDetailView:
-    def test_member_gets_200(self, client, gm_user):
-        world = create_world(owner=gm_user, name="Eberron")
-        campaign = create_campaign(world=world, name="The Last War")
+    def test_authenticated_user_gets_200(self, client, gm_user):
+        campaign = create_campaign(name="The Last War")
         client.force_login(gm_user)
-        response = client.get(
-            f"/worlds/{world.slug}/campaigns/{campaign.slug}/"
-        )
+        response = client.get(f"/world/campaigns/{campaign.slug}/")
         assert response.status_code == 200
 
-    def test_non_member_gets_403(self, client, gm_user, player_user):
-        world = create_world(owner=gm_user, name="Eberron")
-        campaign = create_campaign(world=world, name="The Last War")
+    def test_player_gets_200(self, client, player_user):
+        campaign = create_campaign(name="The Last War")
         client.force_login(player_user)
-        response = client.get(
-            f"/worlds/{world.slug}/campaigns/{campaign.slug}/"
-        )
-        assert response.status_code == 403
+        response = client.get(f"/world/campaigns/{campaign.slug}/")
+        assert response.status_code == 200
+
+    def test_anonymous_redirects_to_login(self, client):
+        campaign = create_campaign(name="The Last War")
+        response = client.get(f"/world/campaigns/{campaign.slug}/")
+        assert response.status_code == 302
+        assert "/accounts/login/" in response["Location"]
 
 
 @pytest.mark.django_db
 class TestCampaignUpdateView:
-    def test_owner_can_update_campaign(self, client, gm_user):
-        world = create_world(owner=gm_user, name="Greyhawk")
-        campaign = create_campaign(world=world, name="Old Name")
+    def test_gm_can_update_campaign(self, client, gm_user):
+        campaign = create_campaign(name="Old Name")
         client.force_login(gm_user)
         response = client.post(
-            f"/worlds/{world.slug}/campaigns/{campaign.slug}/edit/",
+            f"/world/campaigns/{campaign.slug}/edit/",
             {"name": "New Name", "description": "", "status": "complete"},
         )
         assert response.status_code == 302
@@ -68,18 +72,30 @@ class TestCampaignUpdateView:
         assert campaign.name == "New Name"
         assert campaign.status == "complete"
 
+    def test_player_gets_403(self, client, player_user):
+        campaign = create_campaign(name="My Campaign")
+        client.force_login(player_user)
+        response = client.post(
+            f"/world/campaigns/{campaign.slug}/edit/",
+            {"name": "Hacked", "description": ""},
+        )
+        assert response.status_code == 403
+
 
 @pytest.mark.django_db
 class TestCampaignDeleteView:
-    def test_owner_can_delete_campaign(self, client, gm_user):
-        world = create_world(owner=gm_user, name="Ravenloft")
-        campaign = create_campaign(world=world, name="Curse of Strahd")
+    def test_gm_can_delete_campaign(self, client, gm_user):
+        campaign = create_campaign(name="Curse of Strahd")
         slug = campaign.slug
         client.force_login(gm_user)
-        response = client.post(
-            f"/worlds/{world.slug}/campaigns/{slug}/delete/"
-        )
+        response = client.post(f"/world/campaigns/{slug}/delete/")
         assert response.status_code == 302
-        assert f"/worlds/{world.slug}/" in response["Location"]
+        assert "/world/campaigns/" in response["Location"]
         from apps.worlds.models import Campaign
-        assert not Campaign.objects.filter(slug=slug, world=world).exists()
+        assert not Campaign.objects.filter(slug=slug).exists()
+
+    def test_player_gets_403(self, client, player_user):
+        campaign = create_campaign(name="My Campaign")
+        client.force_login(player_user)
+        response = client.post(f"/world/campaigns/{campaign.slug}/delete/")
+        assert response.status_code == 403
