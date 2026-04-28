@@ -15,6 +15,7 @@ Use it to navigate to relevant articles before answering questions or making dec
 - [CampaignForm Status Field](wiki/decisions/campaign-form-status-field.md) — status not required in form; template hides it on create
 - [Widget Registry Pattern](wiki/decisions/widget-registry-pattern.md) — module-level dict maps type_slug → widget class; extend in Phase 8 module system
 - [Singleton Models](wiki/decisions/singleton-models.md) — SiteConfig and WorldConfig both use get_or_create(pk=1); WorldConfigUpdateView overrides get_object()
+- [Worldbook Abstract Entry Model](wiki/decisions/worldbook-abstract-entry-model.md) — abstract base, concrete tables per type; visibility filter via get_visible_queryset; 404 (not 403) for non-visible entries
 
 ## Patterns and Conventions
 *(Code patterns specific to this codebase — populated after first flush)*

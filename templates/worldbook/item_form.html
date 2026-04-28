@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% if form.instance.pk %}{% trans "Edit Item" %}{% else %}{% trans "Create Item" %}{% endif %} — LoreForge{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto py-8">
+  <nav aria-label="{% trans 'Breadcrumb' %}" class="text-sm text-gray-500 mb-4">
+    <a href="{% url 'item-list' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{% trans "Items" %}</a>
+    {% if form.instance.pk %}
+      <span aria-hidden="true"> / </span>
+      <a href="{% url 'item-detail' entry_slug=form.instance.slug %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{{ form.instance.title }}</a>
+    {% endif %}
+    <span aria-hidden="true"> / </span>
+    <span aria-current="page">{% if form.instance.pk %}{% trans "Edit" %}{% else %}{% trans "Create" %}{% endif %}</span>
+  </nav>
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">
+    {% if form.instance.pk %}{% trans "Edit Item" %}{% else %}{% trans "Create Item" %}{% endif %}
+  </h1>
+
+  <form method="post" class="space-y-5" novalidate>
+    {% csrf_token %}
+
+    {% include "worldbook/_entry_form_base.html" %}
+
+    <div>
+      <label for="{{ form.item_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+        {% trans "Item Type" %}
+      </label>
+      <input type="text" name="{{ form.item_type.html_name }}" id="{{ form.item_type.id_for_label }}"
+             value="{{ form.item_type.value|default:'' }}"
+             class="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+
+    <div>
+      <label for="{{ form.rarity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+        {% trans "Rarity" %}
+      </label>
+      <select name="{{ form.rarity.html_name }}" id="{{ form.rarity.id_for_label }}"
+              class="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        {% for value, label in form.fields.rarity.choices %}
+          <option value="{{ value }}" {% if form.rarity.value == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        {% if form.instance.pk %}{% trans "Save Changes" %}{% else %}{% trans "Create Item" %}{% endif %}
+      </button>
+      <a href="{% if form.instance.pk %}{% url 'item-detail' entry_slug=form.instance.slug %}{% else %}{% url 'item-list' %}{% endif %}"
+         class="px-4 py-2 border border-gray-300 text-sm rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        {% trans "Cancel" %}
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

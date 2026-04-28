@@ -16,6 +16,20 @@
           {% trans "Campaigns" %}
         </a>
       </li>
+      <li class="relative group">
+        <button class="px-3 py-1.5 rounded hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-white"
+                aria-haspopup="true" aria-expanded="false">
+          {% trans "Worldbook" %} ▾
+        </button>
+        <ul class="absolute left-0 top-full hidden group-hover:block group-focus-within:block
+                   bg-indigo-800 rounded shadow-lg py-1 min-w-max z-50"
+            role="menu">
+          <li role="none"><a href="{% url 'location-list' %}" role="menuitem" class="block px-4 py-2 hover:bg-indigo-700">{% trans "Locations" %}</a></li>
+          <li role="none"><a href="{% url 'faction-list' %}" role="menuitem" class="block px-4 py-2 hover:bg-indigo-700">{% trans "Factions" %}</a></li>
+          <li role="none"><a href="{% url 'item-list' %}"    role="menuitem" class="block px-4 py-2 hover:bg-indigo-700">{% trans "Items" %}</a></li>
+          <li role="none"><a href="{% url 'lore-list' %}"    role="menuitem" class="block px-4 py-2 hover:bg-indigo-700">{% trans "Lore" %}</a></li>
+        </ul>
+      </li>
       {% if user.is_gm or user.is_admin_user %}
         <li>
           <a href="{% url 'world-settings' %}"

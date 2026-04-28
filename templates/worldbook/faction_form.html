@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% if form.instance.pk %}{% trans "Edit Faction" %}{% else %}{% trans "Create Faction" %}{% endif %} — LoreForge{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto py-8">
+  <nav aria-label="{% trans 'Breadcrumb' %}" class="text-sm text-gray-500 mb-4">
+    <a href="{% url 'faction-list' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{% trans "Factions" %}</a>
+    {% if form.instance.pk %}
+      <span aria-hidden="true"> / </span>
+      <a href="{% url 'faction-detail' entry_slug=form.instance.slug %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">{{ form.instance.title }}</a>
+    {% endif %}
+    <span aria-hidden="true"> / </span>
+    <span aria-current="page">{% if form.instance.pk %}{% trans "Edit" %}{% else %}{% trans "Create" %}{% endif %}</span>
+  </nav>
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">
+    {% if form.instance.pk %}{% trans "Edit Faction" %}{% else %}{% trans "Create Faction" %}{% endif %}
+  </h1>
+
+  <form method="post" class="space-y-5" novalidate>
+    {% csrf_token %}
+
+    {% include "worldbook/_entry_form_base.html" %}
+
+    <div>
+      <label for="{{ form.alignment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+        {% trans "Alignment" %}
+      </label>
+      <input type="text" name="{{ form.alignment.html_name }}" id="{{ form.alignment.id_for_label }}"
+             value="{{ form.alignment.value|default:'' }}"
+             class="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+
+    <div>
+      <label for="{{ form.goals.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+        {% trans "Goals" %}
+      </label>
+      <textarea name="{{ form.goals.html_name }}" id="{{ form.goals.id_for_label }}"
+                rows="4"
+                class="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ form.goals.value|default:'' }}</textarea>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        {% if form.instance.pk %}{% trans "Save Changes" %}{% else %}{% trans "Create Faction" %}{% endif %}
+      </button>
+      <a href="{% if form.instance.pk %}{% url 'faction-detail' entry_slug=form.instance.slug %}{% else %}{% url 'faction-list' %}{% endif %}"
+         class="px-4 py-2 border border-gray-300 text-sm rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        {% trans "Cancel" %}
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

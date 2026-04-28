@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     "apps.home",
     "apps.worlds",
     # Future apps (stubs — uncomment as phases are implemented)
-    # "apps.worldbook",
+    "apps.worldbook",
     # "apps.npcs",
     # "apps.timeline",
     # "apps.maps",

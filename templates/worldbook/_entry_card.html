@@ -1,0 +1,23 @@
+{% load i18n %}
+<li>
+  <a href="{% url detail_url_name entry_slug=entry.slug %}"
+     class="flex flex-col gap-1 p-4 bg-white border border-gray-200 rounded-lg hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <div class="flex items-center gap-3">
+      <span class="font-medium text-gray-900">{{ entry.title }}</span>
+      <span class="ml-auto px-2 py-0.5 rounded-full text-xs font-medium
+        {% if entry.visibility == 'gm_only' %}bg-red-100 text-red-700
+        {% elif entry.visibility == 'player' %}bg-blue-100 text-blue-700
+        {% else %}bg-green-100 text-green-700{% endif %}">
+        {{ entry.get_visibility_display }}
+      </span>
+    </div>
+    {% if entry.tags.all %}
+      <div class="flex flex-wrap gap-1 mt-1">
+        {% for tag in entry.tags.all %}
+          <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">{{ tag.name }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <span class="text-xs text-gray-400 mt-1">{% trans "Updated" %} {{ entry.updated_at|date:"N j, Y" }}</span>
+  </a>
+</li>

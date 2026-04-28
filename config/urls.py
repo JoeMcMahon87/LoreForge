@@ -12,6 +12,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     path("world/", include("apps.worlds.urls")),
     path("homepage/", include("apps.home.urls")),
+    path("worldbook/", include("apps.worldbook.urls")),
 ]
 
 if settings.DEBUG:
